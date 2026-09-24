@@ -1,911 +1,627 @@
 # CIFAKE AI Detector
 
-An end-to-end AI-generated image detection application built with a
-custom TensorFlow/Keras CNN, FastAPI, React, Vite, and Grad-CAM
-explainability.
+### AI-Generated Image Classification with Explainable AI
 
-> **Status:** End-to-end MVP is working and ready for portfolio/demo
-> deployment. The current model is evaluated on the CIFAKE distribution;
-> it is not a universal detector for every AI image generator.
+An end-to-end deep learning web application that classifies images as **REAL** or **FAKE (AI-generated)** using a custom Convolutional Neural Network trained on the **CIFAKE dataset**, with **Grad-CAM** visual explanations.
 
-## 1. Overview
+The project includes a TensorFlow/Keras inference model, FastAPI backend, React + Vite frontend, REST API communication, CORS configuration, and cloud deployment.
 
-The application:
+---
 
-1.  Accepts an uploaded image.
-2.  Converts it to RGB and resizes it to `32x32`.
-3.  Runs the image through a custom CNN.
-4.  Predicts `REAL` or `FAKE`.
-5.  Returns confidence and fake probability.
-6.  Generates a Grad-CAM visualization.
-7.  Displays the prediction and explanation in a React web UI.
+## 🌐 Live Demo
 
-### Stack
+**Frontend:**
+https://cifake-ai-detector.vercel.app/
 
--   Python 3.11
--   TensorFlow/Keras 2.21
--   CUDA + cuDNN
--   NumPy, Pandas, Pillow, OpenCV
--   Scikit-learn, Matplotlib
--   FastAPI + Uvicorn
--   React + Vite
--   JavaScript / CSS
--   Grad-CAM
--   Git/GitHub
--   WSL2 + NVIDIA GPU
+**Backend API:**
+https://cifake-ai-detector.onrender.com/
 
-------------------------------------------------------------------------
+**API Health Check:**
+https://cifake-ai-detector.onrender.com/health
 
-## 2. Architecture
+---
 
-``` text
-                    USER
-                      |
-                      v
-             +------------------+
-             |  React Frontend  |
-             |      Vite        |
-             +--------+---------+
-                      |
-                POST /predict
-                      |
-                      v
-             +------------------+
-             | FastAPI Backend  |
-             +--------+---------+
-                      |
-              +-------+-------+
-              |               |
-              v               v
-       Image Preprocess   Custom CNN
-              |               |
-              |          Fake Probability
-              |               |
-              +-------+-------+
-                      |
-                      v
-                  Prediction
-                      |
-                      v
-                   Grad-CAM
-                      |
-                      v
-             Explainability Image
-                      |
-                      v
-             React Result Screen
+## 📌 Project Overview
+
+The rapid development of generative AI has made it increasingly difficult to distinguish between real and AI-generated images.
+
+This project explores a computer-vision-based approach to the problem by training a CNN to perform binary image classification:
+
+```text
+REAL
+   vs
+FAKE / AI-GENERATED
 ```
 
-------------------------------------------------------------------------
+The system also uses **Grad-CAM (Gradient-weighted Class Activation Mapping)** to provide a visual explanation of which regions of an image contributed to the model's prediction.
 
-## 3. ML Pipeline
+The project is designed primarily around the **CIFAKE dataset**, which contains real CIFAR-10 images and AI-generated synthetic images corresponding to the same CIFAR-10 categories.
 
-``` text
-CIFAKE Dataset
-      |
-      v
-Dataset Verification
-      |
-      v
-Train / Validation / Test CSVs
-      |
-      v
-Image Loading + Resize
-      |
-      v
-Custom CNN Training
-      |
-      v
-Best Checkpoint
-      |
-      v
-Official Test Evaluation
-      |
-      +--> Accuracy
-      +--> Precision
-      +--> Recall
-      +--> F1
-      +--> ROC-AUC
-      +--> Confusion Matrix
-      +--> ROC Curve
-      |
-      v
-Grad-CAM
-      |
-      v
-FastAPI
-      |
-      v
-React Frontend
+---
+
+## 🎯 Objectives
+
+* Build a CNN-based binary image classifier.
+* Detect whether an input image belongs to the REAL or FAKE category.
+* Generate prediction confidence.
+* Provide the model's estimated fake probability.
+* Generate Grad-CAM visual explanations.
+* Expose the trained model through a REST API.
+* Build a web interface for image upload and prediction.
+* Deploy the complete application publicly.
+
+---
+
+## 🧠 Dataset
+
+The project uses the **CIFAKE: Real and AI-Generated Synthetic Images** dataset.
+
+CIFAKE is based on the ten semantic categories of CIFAR-10:
+
+```text
+airplane
+automobile
+bird
+cat
+deer
+dog
+frog
+horse
+ship
+truck
 ```
 
-------------------------------------------------------------------------
+The REAL images originate from CIFAR-10, while the FAKE images are synthetically generated to correspond to the CIFAR-10 categories.
 
-## 4. Dataset
+The commonly distributed CIFAKE dataset contains:
 
-The project uses the **CIFAKE: Real and AI-Generated Synthetic Images**
-dataset.
+```text
+Training:
+100,000 images
+50,000 REAL
+50,000 FAKE
 
-Original dataset:
-
--   60,000 REAL images
--   60,000 AI-generated images
--   100,000 training images
--   20,000 official test images
-
-Classes:
-
-``` text
-REAL -> CIFAR-10-derived real images
-FAKE -> Stable Diffusion v1.4 generated images
+Testing:
+20,000 images
+10,000 REAL
+10,000 FAKE
 ```
 
-Project split:
+Images are based on the small-image CIFAR-10 format, making the project particularly suitable for **CIFAR-10/CIFAKE-style 32×32 images**.
 
-``` text
-Training   : 90,000 (45,000 REAL + 45,000 FAKE)
-Validation : 10,000 (5,000 REAL + 5,000 FAKE)
-Test       : 20,000 (10,000 REAL + 10,000 FAKE)
+### Important limitation
+
+This model should **not** be interpreted as a universal detector for arbitrary modern AI-generated photographs.
+
+Its training distribution is based on CIFAKE/CIFAR-10-style images. Performance on high-resolution photographs, images generated by different models, heavily edited images, or completely different datasets may differ significantly.
+
+---
+
+# 🏗️ System Architecture
+
+```text
+                         USER
+                          │
+                          ▼
+              ┌──────────────────────┐
+              │   React + Vite UI    │
+              │       Vercel         │
+              └──────────┬───────────┘
+                         │
+                         │ POST /predict
+                         │ Multipart Image
+                         ▼
+              ┌──────────────────────┐
+              │    FastAPI Backend   │
+              │       Render         │
+              └──────────┬───────────┘
+                         │
+                         ▼
+              ┌──────────────────────┐
+              │ TensorFlow / Keras   │
+              │   Custom CNN Model   │
+              └──────────┬───────────┘
+                         │
+                 ┌───────┴────────┐
+                 │                │
+                 ▼                ▼
+          Classification       Grad-CAM
+          REAL / FAKE          Heatmap
+                 │                │
+                 └───────┬────────┘
+                         ▼
+              ┌──────────────────────┐
+              │ Prediction Response  │
+              │ Confidence           │
+              │ Fake Probability     │
+              │ Grad-CAM Image       │
+              └──────────┬───────────┘
+                         │
+                         ▼
+              React Dashboard
 ```
 
-Dataset verification found:
+---
 
-``` text
-Train/validation overlap : 0
-Missing files             : 0
-Class counts              : Correct
-Official test             : Preserved
+# 🔄 End-to-End Pipeline
+
+```text
+Image Upload
+     │
+     ▼
+Read Image
+     │
+     ▼
+Convert to RGB
+     │
+     ▼
+Resize to 32 × 32
+     │
+     ▼
+Convert to NumPy Array
+     │
+     ▼
+Add Batch Dimension
+     │
+     ▼
+TensorFlow CNN
+     │
+     ├───────────────┐
+     ▼               ▼
+Fake Probability   Feature Maps
+     │               │
+     ▼               ▼
+REAL / FAKE        Grad-CAM
+     │               │
+     └───────┬───────┘
+             ▼
+       API Response
+             │
+             ▼
+       React Dashboard
 ```
 
-CSV files:
+---
 
-``` text
-dataset/splits/
-├── train.csv
-├── validation.csv
-└── test.csv
+# 🤖 Machine Learning Model
+
+The project uses a custom **Convolutional Neural Network (CNN)** implemented with TensorFlow/Keras.
+
+The model learns visual patterns that help distinguish the real and synthetic image classes.
+
+The trained model is stored as:
+
+```text
+model/
+├── cifake_custom_cnn_best.keras
+└── cifake_custom_cnn_final.keras
 ```
 
-The dataset itself should not be committed to GitHub because of its
-size.
+The production API loads:
 
-------------------------------------------------------------------------
-
-## 5. Preprocessing
-
-The current model uses the native CIFAKE resolution:
-
-``` text
-32 x 32 x 3
+```text
+cifake_custom_cnn_best.keras
 ```
 
-Pipeline:
+---
 
-``` text
-Image
-  -> decode
-  -> RGB
-  -> resize 32x32
-  -> CNN
+# 🔍 Grad-CAM Explainability
+
+A classification result alone does not explain why the model made a prediction.
+
+To improve interpretability, the application uses **Grad-CAM**.
+
+Grad-CAM uses gradients flowing into a selected convolutional layer to identify image regions that contributed to the prediction.
+
+The application generates a heatmap and overlays it onto the original image.
+
+Conceptually:
+
+```text
+Input Image
+     │
+     ▼
+CNN Feature Maps
+     │
+     ▼
+Gradients
+     │
+     ▼
+Weighted Feature Maps
+     │
+     ▼
+Grad-CAM Heatmap
+     │
+     ▼
+Overlay on Original Image
 ```
 
-The model was trained with raw `0-255` pixel values, so inference uses
-the same preprocessing.
+This provides a visual indication of the regions the model focused on.
 
-------------------------------------------------------------------------
+---
 
-## 6. CNN Architecture
+# ⚙️ Backend
 
-``` text
-Input: 32x32x3
-       |
-Conv2D 32
-BatchNorm
-Conv2D 32
-MaxPooling
-Dropout 0.15
-       |
-Conv2D 64
-BatchNorm
-Conv2D 64
-MaxPooling
-Dropout 0.20
-       |
-Conv2D 128
-BatchNorm
-Conv2D 128
-MaxPooling
-Dropout 0.25
-       |
-GlobalAveragePooling
-       |
-Dense 128
-Dropout 0.40
-       |
-Dense 1 + Sigmoid
-       |
-FAKE Probability
-```
+The backend is implemented using **FastAPI**.
 
-Total parameters:
-
-``` text
-304,545
-```
-
-Training configuration:
-
-``` text
-Optimizer : Adam
-Learning rate : 0.001
-Loss : Binary Cross-Entropy
-Metrics : Accuracy, ROC-AUC
-```
-
-Training also used model checkpointing, early stopping, and
-learning-rate reduction.
-
-Best model:
-
-``` text
-model/cifake_custom_cnn_best.keras
-```
-
-------------------------------------------------------------------------
-
-## 7. Evaluation
-
-Official CIFAKE test results:
-
-  Metric        Result
-  ----------- --------
-  Accuracy      96.24%
-  Precision     97.65%
-  Recall        94.75%
-  F1 Score      96.18%
-  ROC-AUC       99.46%
-
-Confusion matrix:
-
-``` text
-                 Predicted
-                 REAL    FAKE
-
-Actual REAL      9772     228
-Actual FAKE       525    9475
-```
-
-Evaluation artifacts:
-
-``` text
-model/evaluation_results/
-├── classification_report.txt
-├── confusion_matrix.png
-├── prediction_distribution.png
-├── roc_curve.png
-└── test_predictions.csv
-```
-
-------------------------------------------------------------------------
-
-## 8. Grad-CAM
-
-Grad-CAM provides a visual explanation of the model prediction.
-
-The implementation uses the final convolutional layer:
-
-``` text
-conv2d_5
-```
-
-It generates a heatmap and overlay showing image regions that
-contributed to the prediction.
-
-Manual usage:
-
-``` bash
-python model/gradcam.py <path_to_image>
-```
-
-Results are saved under:
-
-``` text
-model/gradcam_results/
-```
-
-The FastAPI `/predict` endpoint also generates a Grad-CAM image for each
-uploaded image.
-
-------------------------------------------------------------------------
-
-## 9. Backend
-
-Main file:
-
-``` text
-backend/main.py
-```
-
-Startup flow:
-
-``` text
-FastAPI starts
-    |
-Load model once
-    |
-Receive image
-    |
-Preprocess
-    |
-Predict
-    |
-Generate Grad-CAM
-    |
-Save Grad-CAM
-    |
-Return JSON
-```
-
-Endpoints:
+### Main API endpoints
 
 ### `GET /`
 
-Basic API endpoint.
+Returns basic API status.
 
 ### `GET /health`
 
-Health check.
+Checks whether the backend and model are available.
+
+Example:
+
+```json
+{
+  "status": "healthy",
+  "model_loaded": true,
+  "gpu_available": false
+}
+```
 
 ### `POST /predict`
 
-Accepts an uploaded image.
+Accepts an uploaded image and returns:
 
-Example response:
-
-``` json
+```json
 {
   "filename": "example.jpg",
   "prediction": "FAKE",
-  "confidence": 0.9821,
-  "probability_fake": 0.9821,
+  "confidence": 0.94,
+  "probability_fake": 0.94,
   "gradcam_url": "/static/gradcam/example_gradcam.jpg"
 }
 ```
 
-Prediction logic:
+---
 
-``` python
-probability_fake = float(prediction.numpy()[0][0])
+# 🎨 Frontend
 
-if probability_fake >= 0.5:
-    label = "FAKE"
-    confidence = probability_fake
-else:
-    label = "REAL"
-    confidence = 1.0 - probability_fake
+The frontend is built using:
+
+* React
+* Vite
+* JavaScript
+* CSS
+
+The interface allows users to:
+
+1. Upload an image.
+2. Send it to the FastAPI backend.
+3. Receive the model prediction.
+4. View REAL/FAKE classification.
+5. View confidence.
+6. View fake probability.
+7. View the Grad-CAM explanation.
+
+---
+
+# 🌍 Deployment Architecture
+
+The application is deployed as two separate services.
+
+```text
+                 Internet
+                    │
+                    ▼
+        ┌──────────────────────┐
+        │      Vercel          │
+        │ React + Vite Frontend│
+        └──────────┬───────────┘
+                   │
+                   │ HTTPS REST API
+                   ▼
+        ┌──────────────────────┐
+        │       Render         │
+        │ FastAPI Backend      │
+        │ TensorFlow Model     │
+        └──────────────────────┘
 ```
-
-------------------------------------------------------------------------
-
-## 10. Frontend
-
-Frontend structure:
-
-``` text
-frontend/
-├── package.json
-└── src/
-    ├── App.jsx
-    ├── App.css
-    ├── index.css
-    ├── main.jsx
-    ├── assets/
-    │   └── hero.png
-    └── components/
-        ├── ImageUploader.jsx
-        ├── PredictionResult.jsx
-        └── GradCAM.jsx
-```
-
-Flow:
-
-``` text
-Choose Image
-     |
-Preview
-     |
-Analyze
-     |
-POST /predict
-     |
-Receive JSON
-     |
-Display:
-- Prediction
-- Confidence
-- Fake Probability
-- Grad-CAM
-```
-
-------------------------------------------------------------------------
-
-## 11. Project Structure
-
-``` text
-CIFAKE-AI-DETECTOR/
-├── backend/
-│   ├── __init__.py
-│   ├── main.py
-│   └── static/
-│       └── gradcam/
-├── dataset/
-│   ├── create_dataset_splits.py
-│   ├── data_loader.py
-│   └── splits/
-│       ├── train.csv
-│       ├── validation.csv
-│       └── test.csv
-├── model/
-│   ├── build_model.py
-│   ├── train.py
-│   ├── debug_train.py
-│   ├── evaluate.py
-│   ├── gradcam.py
-│   ├── cifake_custom_cnn_best.keras
-│   ├── cifake_custom_cnn_final.keras
-│   ├── evaluation_results/
-│   └── gradcam_results/
-├── notebooks/
-│   └── 01_dataset_exploration.ipynb
-├── frontend/
-│   ├── package.json
-│   └── src/
-│       ├── App.jsx
-│       ├── App.css
-│       ├── index.css
-│       ├── main.jsx
-│       ├── assets/
-│       └── components/
-└── README.md
-```
-
-------------------------------------------------------------------------
-
-## 12. Requirements
-
-Recommended environment:
-
-``` text
-Python 3.11
-Node.js + npm
-Windows 11 + WSL2 (for the development GPU setup)
-NVIDIA GPU + compatible CUDA/cuDNN environment (optional for CPU use)
-```
-
-Python packages:
-
-``` bash
-pip install "tensorflow[and-cuda]==2.21.0"
-pip install pandas==2.2.3 numpy scikit-learn pillow opencv-python matplotlib
-pip install fastapi uvicorn python-multipart
-```
-
-Frontend:
-
-``` bash
-cd frontend
-npm install
-```
-
-------------------------------------------------------------------------
-
-## 13. GPU Setup
-
-Development used:
-
-``` text
-NVIDIA GeForce RTX 4050 Laptop GPU
-~6 GB VRAM
-WSL2 Ubuntu
-Python 3.11
-TensorFlow 2.21.0
-CUDA + cuDNN
-```
-
-Verify TensorFlow GPU:
-
-``` bash
-python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
-```
-
-Expected:
-
-``` text
-[PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
-```
-
-The backend was also verified to load the model on the RTX 4050 and use
-cuDNN.
-
-------------------------------------------------------------------------
-
-## 14. Run Locally
-
-### Clone
-
-``` bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd CIFAKE-AI-DETECTOR
-```
-
-### Create and activate Python environment
-
-``` bash
-python3.11 -m venv wsl_venv
-source wsl_venv/bin/activate
-```
-
-### Install backend packages
-
-``` bash
-pip install "tensorflow[and-cuda]==2.21.0"
-pip install pandas==2.2.3 numpy scikit-learn pillow opencv-python matplotlib
-pip install fastapi uvicorn python-multipart
-```
-
-### Configure dataset
-
-Update the dataset path in:
-
-``` text
-dataset/data_loader.py
-```
-
-so it points to your local CIFAKE `DATASET` directory.
-
-### Start backend
-
-From the project root:
-
-``` bash
-source wsl_venv/bin/activate
-uvicorn backend.main:app --reload
-```
-
-Backend:
-
-``` text
-http://localhost:8000
-```
-
-Swagger:
-
-``` text
-http://localhost:8000/docs
-```
-
-### Start frontend
-
-Open another terminal:
-
-``` bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend:
-
-``` text
-http://localhost:5173
-```
-
-Open the frontend, upload an image, and click **Analyze Image**.
-
-------------------------------------------------------------------------
-
-## 15. Training From Scratch
-
-Create/recreate dataset splits:
-
-``` bash
-python dataset/create_dataset_splits.py
-```
-
-Train:
-
-``` bash
-python model/train.py
-```
-
-Evaluate:
-
-``` bash
-python model/evaluate.py
-```
-
-Run Grad-CAM manually:
-
-``` bash
-python model/gradcam.py <path_to_image>
-```
-
-------------------------------------------------------------------------
-
-## 16. Deployment Notes
-
-The application is working end-to-end and is suitable for deployment as
-an MVP/demo.
-
-Before production deployment, change development-only configuration:
-
-### Frontend API URL
-
-The current frontend uses the local backend URL:
-
-``` text
-http://localhost:8000
-```
-
-For deployment, replace it with the deployed API URL. Prefer a Vite
-environment variable such as:
-
-``` text
-VITE_API_URL
-```
-
-### CORS
-
-The backend currently allows the local Vite origins:
-
-``` text
-http://localhost:5173
-http://127.0.0.1:5173
-```
-
-For production, allow only the actual deployed frontend domain.
-
-### Model
-
-The deployed backend needs access to:
-
-``` text
-model/cifake_custom_cnn_best.keras
-```
-
-### GPU
-
-GPU inference is optional. If the hosting platform provides an NVIDIA
-GPU, TensorFlow can use it with the appropriate CUDA/cuDNN environment.
-CPU inference can also be used for a demo, but may be slower.
-
-### Storage
-
-The backend currently generates Grad-CAM images under:
-
-``` text
-backend/static/gradcam/
-```
-
-For production, add appropriate cleanup or persistent/object storage if
-many requests are expected.
-
-------------------------------------------------------------------------
-
-## 17. Current Limitations
-
-The model should **not** be presented as a universal AI detector.
-
-The current training data is CIFAKE-based:
-
-``` text
-REAL -> CIFAR-10-derived images
-FAKE -> Stable Diffusion v1.4 images
-```
-
-The model achieved excellent performance on the official CIFAKE test
-distribution, but external AI images can be misclassified.
-
-For example, an external AI-generated poster was classified as REAL with
-a fake probability of approximately `0.0004`. This demonstrates that
-high in-distribution accuracy does not guarantee generalization to
-unseen generators, image styles, resolutions, or domains.
-
-Therefore, the current system is best described as:
-
-> A CIFAKE-trained AI-generated image classification system with
-> Grad-CAM explainability.
-
-not:
-
-> A universal detector that can reliably identify every AI-generated
-> image.
-
-------------------------------------------------------------------------
-
-## 18. Future Improvements
-
-### Broader training data
-
-Add real and AI-generated images from multiple sources and generators,
-such as:
-
--   Real photographs
--   Real portraits
--   Real landscapes
--   Stable Diffusion
--   Midjourney
--   DALL-E
--   Flux
--   Other generators
-
-### Higher resolution
-
-Evaluate moving from:
-
-``` text
-32x32
-```
-
-to:
-
-``` text
-128x128
-```
-
-or:
-
-``` text
-224x224
-```
-
-to preserve more visual information.
-
-### External testing
-
-Create a separate test set that was never used during training.
-
-### Unseen-generator testing
-
-Train on some generators and test on a generator not seen during
-training.
-
-### Stronger models
-
-Experiment with:
-
--   ResNet
--   EfficientNet
--   ConvNeXt
--   Transfer learning
-
-### Production engineering
-
-Add:
-
--   Environment variables
--   Docker
--   Production CORS
--   File-size/type validation
--   Rate limiting
--   Authentication if required
--   Better temporary-file cleanup
--   Cloud/GPU deployment
-
-------------------------------------------------------------------------
-
-## 19. What This Project Demonstrates
-
-### Machine Learning
-
--   Dataset preparation
--   Data splitting
--   Image preprocessing
--   CNN design
--   Binary classification
--   Training and validation
--   Checkpointing
--   Early stopping
--   Learning-rate scheduling
--   Model evaluation
--   ROC-AUC
--   Confusion matrices
-
-### Deep Learning
-
--   TensorFlow/Keras
--   GPU acceleration
--   CUDA
--   cuDNN
--   CNN feature extraction
--   Sigmoid classification
--   Grad-CAM
-
-### Backend
-
--   FastAPI
--   REST APIs
--   Multipart image uploads
--   TensorFlow model serving
--   JSON APIs
--   Static file serving
--   CORS
 
 ### Frontend
 
--   React
--   Vite
--   Components
--   State management
--   File upload
--   REST API integration
--   Prediction visualization
--   Explainability visualization
+Hosted on:
 
-### Engineering
-
--   WSL2
--   Virtual environments
--   Git/GitHub
--   Debugging
--   ML + backend + frontend integration
--   End-to-end application development
-
-------------------------------------------------------------------------
-
-## 20. Project Status
-
-``` text
-Dataset preparation       ✅
-Dataset splitting         ✅
-Data validation           ✅
-Data loader               ✅
-GPU configuration         ✅
-CNN architecture          ✅
-Model training            ✅
-Best model selection      ✅
-Official evaluation       ✅
-Metrics                   ✅
-Confusion matrix          ✅
-ROC curve                 ✅
-Grad-CAM                  ✅
-FastAPI server            ✅
-Model prediction API      ✅
-Image upload API          ✅
-GPU inference             ✅
-Backend Grad-CAM          ✅
-React frontend            ✅
-Frontend ↔ Backend        ✅
-Local end-to-end testing  ✅
-GitHub preparation        ⏳
-Deployment                ⏳
-Portfolio/LinkedIn        ⏳
+```text
+Vercel
 ```
 
-------------------------------------------------------------------------
+### Backend
 
-## 21. Author
+Hosted on:
 
-**Singupurapu Srihari**
-
-B.Tech CSE (AI & ML)
-
-Project: **CIFAKE AI Detector**
-
-Built with:
-
-``` text
-TensorFlow + FastAPI + React
+```text
+Render
 ```
 
-------------------------------------------------------------------------
+### Environment configuration
 
-## 22. Disclaimer
+The frontend uses:
 
-This project is intended for educational, research, and demonstration
-purposes.
+```text
+VITE_API_URL
+```
 
-A prediction from the model should not be treated as definitive proof
-that an image is authentic or AI-generated. Performance depends on the
-training distribution and the similarity between new images and the data
-used to train the model.
+Production value:
+
+```text
+https://cifake-ai-detector.onrender.com
+```
+
+For local development:
+
+```text
+VITE_API_URL=http://localhost:8000
+```
+
+---
+
+# 📁 Project Structure
+
+```text
+CIFAKE-AI-DETECTOR/
+│
+├── backend/
+│   ├── main.py
+│   ├── __init__.py
+│   └── static/
+│       └── gradcam/
+│
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   ├── index.css
+│   │   └── main.jsx
+│   │
+│   ├── public/
+│   ├── package.json
+│   ├── package-lock.json
+│   └── vite.config.js
+│
+├── model/
+│   ├── cifake_custom_cnn_best.keras
+│   └── cifake_custom_cnn_final.keras
+│
+├── notebooks/
+│
+├── results/
+│
+├── dataset/
+│
+├── README.md
+├── requirements.txt
+├── .gitignore
+└── .python-version
+```
+
+---
+
+# 💻 Local Setup
+
+## 1. Clone the repository
+
+```bash
+git clone https://github.com/srihari1105/CIFAKE-AI-DETECTOR.git
+cd CIFAKE-AI-DETECTOR
+```
+
+---
+
+# 🐍 Backend Setup
+
+Create and activate a Python virtual environment.
+
+```bash
+python -m venv venv
+```
+
+### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+### Linux / WSL
+
+```bash
+source venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Start the FastAPI server:
+
+```bash
+uvicorn backend.main:app --reload
+```
+
+The backend will be available at:
+
+```text
+http://localhost:8000
+```
+
+API documentation:
+
+```text
+http://localhost:8000/docs
+```
+
+---
+
+# ⚛️ Frontend Setup
+
+Open another terminal.
+
+```bash
+cd frontend
+npm install
+```
+
+Create/update:
+
+```text
+frontend/.env
+```
+
+with:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+Start the frontend:
+
+```bash
+npm run dev
+```
+
+The frontend will normally be available at:
+
+```text
+http://localhost:5173
+```
+
+---
+
+# 🧪 Testing the API
+
+You can test the API through the interactive Swagger documentation:
+
+```text
+http://localhost:8000/docs
+```
+
+Or use the live API:
+
+```text
+https://cifake-ai-detector.onrender.com/docs
+```
+
+---
+
+# 📦 Requirements
+
+Main technologies used:
+
+```text
+Python
+TensorFlow
+Keras
+NumPy
+Pandas
+Scikit-learn
+Pillow
+OpenCV
+Matplotlib
+FastAPI
+Uvicorn
+React
+Vite
+JavaScript
+Git
+GitHub
+Vercel
+Render
+```
+
+---
+
+# 🔐 Environment Variables
+
+Frontend:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+Production:
+
+```env
+VITE_API_URL=https://cifake-ai-detector.onrender.com
+```
+
+Do not store passwords, private API keys, or other secrets in `VITE_*` variables because Vite exposes these variables to client-side code during the build.
+
+---
+
+# ⚠️ Limitations
+
+This project is an experimental/development implementation of AI-generated image classification.
+
+Important limitations include:
+
+* The model is trained on CIFAKE/CIFAR-10-style images.
+* Input images are resized to 32×32 pixels.
+* Performance can change substantially on images outside the training distribution.
+* The model should not be treated as a universal AI-image detector.
+* Confidence represents the model's prediction probability, not a guarantee of authenticity.
+* Grad-CAM provides an approximate visual explanation rather than a definitive causal explanation.
+* The free cloud deployment may experience cold-start delays after periods of inactivity.
+
+---
+
+# 🚀 Future Improvements
+
+Possible future improvements include:
+
+* Training with larger and more diverse image datasets.
+* Supporting higher-resolution images.
+* Testing against images generated by multiple modern generative models.
+* Improving robustness against image compression and editing.
+* Adding model comparison experiments.
+* Adding more advanced explainability techniques.
+* Adding persistent storage for generated Grad-CAM images.
+* Containerizing the application with Docker.
+* Adding automated testing and CI/CD.
+* Improving model calibration and confidence estimation.
+
+---
+
+# 📚 References
+
+### CIFAKE Dataset
+
+Bird, J. J., & Lotfi, A.
+**CIFAKE: Image Classification and Explainable Identification of AI-Generated Synthetic Images.**
+
+### CIFAR-10
+
+Krizhevsky, A., & Hinton, G.
+**Learning Multiple Layers of Features from Tiny Images.**
+
+### Explainability
+
+Selvaraju et al.
+**Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization.**
+
+---
+
+# 👨‍💻 Author
+
+**Srihari Singupurapu**
+
+B.Tech — Computer Science & Engineering (AI & ML)
+
+---
+
+## ⭐ Project Links
+
+**Live Application:**
+https://cifake-ai-detector.vercel.app/
+
+**Backend API:**
+https://cifake-ai-detector.onrender.com/
+
+**GitHub Repository:**
+https://github.com/srihari1105/CIFAKE-AI-DETECTOR
