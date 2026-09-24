@@ -1,0 +1,86 @@
+# ==============================
+# Python
+# ==============================
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+env/
+wsl_venv/
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ==============================
+# Environment variables
+# ==============================
+
+.env
+.env.local
+.env.*.local
+
+# ==============================
+# Node / React
+# ==============================
+
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ==============================
+# Dataset
+# ==============================
+
+dataset/DATASET/
+DATASET/
+
+# Original CIFAKE dataset
+*.zip
+
+# ==============================
+# IDE / Editor
+# ==============================
+
+.vscode/
+.idea/
+
+# ==============================
+# OS files
+# ==============================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==============================
+# Logs
+# ==============================
+
+*.log
+
+# ==============================
+# Temporary files
+# ==============================
+
+*.tmp
+*.temp
+
+# ==============================
+# Jupyter
+# ==============================
+
+.ipynb_checkpoints/
+
+# ==============================
+# Generated files
+# ==============================
+
+backend/static/gradcam/*
+!backend/static/gradcam/.gitkeep

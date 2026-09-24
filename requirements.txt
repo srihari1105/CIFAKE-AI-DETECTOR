@@ -1,0 +1,10 @@
+tensorflow[and-cuda]==2.21.0
+numpy
+pandas==2.2.3
+scikit-learn
+Pillow
+opencv-python
+matplotlib
+fastapi
+uvicorn[standard]
+python-multipart

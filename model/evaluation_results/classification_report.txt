@@ -1,0 +1,17 @@
+CIFAKE MODEL CLASSIFICATION REPORT
+==================================================
+
+Accuracy : 0.9624
+Precision: 0.9765
+Recall   : 0.9475
+F1 Score : 0.9618
+ROC-AUC  : 0.9946
+
+              precision    recall  f1-score   support
+
+        REAL     0.9490    0.9772    0.9629     10000
+        FAKE     0.9765    0.9475    0.9618     10000
+
+    accuracy                         0.9624     20000
+   macro avg     0.9628    0.9624    0.9623     20000
+weighted avg     0.9628    0.9624    0.9623     20000
