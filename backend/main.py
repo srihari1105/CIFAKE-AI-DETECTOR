@@ -60,6 +60,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "https://cifake-ai-detector.vercel.app",
     ],
+    allow_origin_regex=r"https://cifake-ai-detector-[a-z0-9-]+\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
